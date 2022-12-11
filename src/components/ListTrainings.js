@@ -5,8 +5,6 @@ import { Button } from '@mui/material';
 import { AgGridReact } from 'ag-grid-react/lib/agGridReact';
 import dayjs from "dayjs";
 
-import { API_URL_T } from '../constants';
-
 export default function ListTrainings() {
   const [trainings, setTrainings] = useState([]);
 
@@ -21,45 +19,51 @@ export default function ListTrainings() {
     },
     { field: "activity", sortable: true, filter: true },
     { field: "duration", sortable: true, filter: true },
-   
     {
-      headerName: " ",
-      field: "links[0].href",
-      cellRenderer: params => <Button size='small' color='error' onClick={() => deleteTraining(params.data.links[0].href)}>Delete</Button>
+      headerName: 'Firstname',
+      field: 'customer.firstname',
+      sortable: true,
+      filter: true
     },
     {
-      field: 'Customer', sortable: true, filter: true
-
+      headerName: 'Lastname',
+      field: 'customer.lastname',
+      sortable: true,
+      filter: true
+    },
+    {
+      headerName: '',
+      field: 'id',
+      sortable: true,
+      filter: true,
+      cellRenderer: params => <Button size='small' color='error' onClick={() => deleteTraining(params.value)}>Delete
+      </Button>
     }
   ])
 
-  useEffect(() => getTrainigs(), []);
-  const getTrainigs = () => {
-    fetch(API_URL_T)
-      .then(response => {
-        if (response.ok)
-          return response.json();
-        else
-          alert('something went wrong')
-      })
-      .then(data => setTrainings(data.content))
+  useEffect(() => {
+    getTrainings();
+  }, []);
+  const getTrainings = () => {
+    fetch('https://customerrest.herokuapp.com/gettrainings')
+      .then(response => response.json())
+      .then(data => setTrainings(data))
       .catch(err => console.error(err))
   }
-  useEffect(() => {
-    getTrainigs();
-  }, []);
 
-  const deleteTraining = (url) => {
-    if (window.confirm("Are you sure?")) {
-      fetch(url, { method: "DELETE" }).then((response) => {
-        if (response.ok) {
-          getTrainigs();
-        } else {
-          alert("Something went wrong");
-        }
-      });
+  const deleteTraining = (id) => {
+    if (window.confirm('Are you sure?')) {
+      fetch('https://customerrest.herokuapp.com/api/trainings/' + id, { method: 'DELETE' })
+        .then(response => {
+          if (response.ok) {
+            getTrainings();
+          }
+          else
+            alert('Something went wrong');
+        })
+        .catch(err => console.error(err))
     }
-  };
+  }
 
   return (
     <div className="App">
@@ -71,8 +75,6 @@ export default function ListTrainings() {
           paginationPageSize={10}
         />
       </div>
-
-
     </div>
   )
 }
